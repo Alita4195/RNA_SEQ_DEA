@@ -1,0 +1,48 @@
+getwd()
+if (!require("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+
+BiocManager::install("DESeq2")
+BiocManager::install("edgeR")
+Coinfection.targets<-read.delim("./data/fileDesc.txt")
+
+
+rownames(Coinfection.targets)<-c("Ha1","Ha2","Ha3","Ctr1","Ctr2","Ctr3")
+library(edgeR)
+library(DESeq2)
+
+Coinfection.orig <- readDGE(Coinfection.targets, header=F)
+dim(Coinfection.orig)
+
+head(Coinfection.orig)
+Coinfection.rawCount <- Coinfection.orig$count
+dim(Coinfection.rawCount)
+sampletype <- factor(c(rep("Ha",3), rep("Ctr", 3)))
+meta <- data.frame(sampletype, row.names = colnames(Coinfection.orig$count))
+colnames(Coinfection.orig$count)
+rownames(meta)
+all(colnames(Coinfection.orig$count) %in% rownames(meta))
+library(DESeq2)
+dds <- DESeqDataSetFromMatrix(Coinfection.orig, colData = meta, design = ~ sampletype)
+head(counts(dds))
+dds <- estimateSizeFactors(dds)
+sizeFactors(dds)
+normalized_counts <- counts(dds, normalized=TRUE)
+write.csv(normalized_counts, file="./results/coinfection_normalized_counts_DESeq2.csv")
+rld <- rlog(dds, blind=TRUE)
+plotPCA(rld, intgroup="sampletype")
+pdf("./results/PlotPCA_dds.pdf")
+plotPCA(rld, intgroup="sampletype")
+dev.off()
+rld_mat <- assay(rld)
+rld_cor <- cor(rld_mat) 
+install.packages("pheatmap")
+library(pheatmap)
+pheatmap(rld_cor, annotation = meta)
+heat.colors <- RColorBrewer::brewer.pal(6, "Blues")
+pheatmap(rld_cor, annotation = meta, color = heat.colors, border_color=NA, fontsize = 10, 
+         fontsize_row = 10, height=20)
+pdf("./results/PlotHeatmap_dds.pdf")
+heat.colors <- RColorBrewer::brewer.pal(6, "Blues")
+pheatmap(rld_cor, annotation = meta, color = heat.colors, border_color=NA, fontsize = 10, 
+         fontsize_row = 10, height=20)

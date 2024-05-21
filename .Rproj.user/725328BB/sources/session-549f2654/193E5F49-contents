@@ -1,13 +1,1 @@
-getwd()
-if (!require("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
 
-BiocManager::install("DESeq2")
-BiocManager::install("edgeR")
-Coinfection.targets<-read.delim("./data/fileDesc.txt")
-rownames(Coinfection.targets)<-c("Ha1","Ha2","Ha3","Ctr1","Ctr2","Ctr3")
-
-
-
-
-                                
